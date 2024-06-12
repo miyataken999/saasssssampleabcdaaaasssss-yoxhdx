@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Websites</h2>
+    <ul>
+        {% for website in websites %}
+            <li>{{ website.name }} ({{ website.url }})</li>
+        {% empty %}
+            <li>No websites available.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

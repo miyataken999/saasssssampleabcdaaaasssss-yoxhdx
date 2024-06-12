@@ -1,0 +1,293 @@
+
+2024-06-12T12:30:26.966826
+================================ System Message ================================
+
+You will get information about a codebase that is currently on disk in the current folder.
+The user will ask you to write a script that runs the code in a specific way.
+You will answer with code blocks that include all the necessary terminal commands.
+Do not install globally. Do not use sudo.
+Do not explain the code, just give the commands.
+Do not use placeholders, use example values (like . for a folder argument) if necessary.
+
+
+================================ Human Message =================================
+
+
+        Make a unix script that
+        a) installs dependencies
+        b) runs all necessary parts of the codebase (in parallel if necessary)
+        
+Information about the codebase:
+
+```
+File: structure
+1 banking_system
+2 requirements.txt
+3 src
+4 __init__.py
+5 models
+6 __init__.py
+7 account.py
+8 transaction.py
+9 user.py
+10 services
+11 __init__.py
+12 account_service.py
+13 transaction_service.py
+14 user_service.py
+15 repositories
+16 __init__.py
+17 account_repository.py
+18 transaction_repository.py
+19 user_repository.py
+20 main.py
+21 tests
+22 __init__.py
+23 test_account.py
+24 test_transaction.py
+25 test_user.py
+
+File: requirements.txt
+1 pytest
+2 dataclasses
+
+File: src/__init__.py
+1 # empty file
+
+File: src/models/__init__.py
+1 # empty file
+
+File: src/models/account.py
+1 from dataclasses import dataclass
+2 
+3 @dataclass
+4 class Account:
+5     id: int
+6     user_id: int
+7     balance: float
+8 
+9     def __init__(self, user_id: int, balance: float = 0.0):
+10         self.id = None
+11         self.user_id = user_id
+12         self.balance = balance
+
+File: src/models/transaction.py
+1 from dataclasses import dataclass
+2 
+3 @dataclass
+4 class Transaction:
+5     id: int
+6     account_id: int
+7     amount: float
+8     type: str
+9 
+10     def __init__(self, account_id: int, amount: float, type: str):
+11         self.id = None
+12         self.account_id = account_id
+13         self.amount = amount
+14         self.type = type
+
+File: src/models/user.py
+1 from dataclasses import dataclass
+2 
+3 @dataclass
+4 class User:
+5     id: int
+6     name: str
+7     email: str
+8 
+9     def __init__(self, name: str, email: str):
+10         self.id = None
+11         self.name = name
+12         self.email = email
+
+File: src/services/__init__.py
+1 # empty file
+
+File: src/services/account_service.py
+1 from .account_repository import AccountRepository
+2 from ..models.account import Account
+3 
+4 class AccountService:
+5     def __init__(self, repository: AccountRepository):
+6         self.repository = repository
+7 
+8     def create_account(self, user_id: int, balance: float = 0.0) -> Account:
+9         account = Account(user_id, balance)
+10         self.repository.save(account)
+11         return account
+12 
+13     def get_account(self, id: int) -> Account:
+14         return self.repository.get(id)
+
+File: src/services/transaction_service.py
+1 from .transaction_repository import TransactionRepository
+2 from ..models.transaction import Transaction
+3 
+4 class TransactionService:
+5     def __init__(self, repository: TransactionRepository):
+6         self.repository = repository
+7 
+8     def create_transaction(self, account_id: int, amount: float, type: str) -> Transaction:
+9         transaction = Transaction(account_id, amount, type)
+10         self.repository.save(transaction)
+11         return transaction
+12 
+13     def get_transactions(self, account_id: int) -> list[Transaction]:
+14         return self.repository.get_all(account_id)
+
+File: src/services/user_service.py
+1 from .user_repository import UserRepository
+2 from ..models.user import User
+3 
+4 class UserService:
+5     def __init__(self, repository: UserRepository):
+6         self.repository = repository
+7 
+8     def create_user(self, name: str, email: str) -> User:
+9         user = User(name, email)
+10         self.repository.save(user)
+11         return user
+12 
+13     def get_user(self, id: int) -> User:
+14         return self.repository.get(id)
+
+File: src/repositories/__init__.py
+1 # empty file
+
+File: src/repositories/account_repository.py
+1 from ..models.account import Account
+2 
+3 class AccountRepository:
+4     def __init__(self):
+5         self.accounts = {}
+6 
+7     def save(self, account: Account):
+8         if account.id is None:
+9             account.id = len(self.accounts) + 1
+10             self.accounts[account.id] = account
+11         else:
+12             self.accounts[account.id] = account
+13 
+14     def get(self, id: int) -> Account:
+15         return self.accounts.get(id)
+
+File: src/repositories/transaction_repository.py
+1 from ..models.transaction import Transaction
+2 
+3 class TransactionRepository:
+4     def __init__(self):
+5         self.transactions = {}
+6 
+7     def save(self, transaction: Transaction):
+8         if transaction.id is None:
+9             transaction.id = len(self.transactions) + 1
+10             self.transactions[transaction.id] = transaction
+11         else:
+12             self.transactions[transaction.id] = transaction
+13 
+14     def get_all(self, account_id: int) -> list[Transaction]:
+15         return [t for t in self.transactions.values() if t.account_id == account_id]
+
+File: src/repositories/user_repository.py
+1 from ..models.user import User
+2 
+3 class UserRepository:
+4     def __init__(self):
+5         self.users = {}
+6 
+7     def save(self, user: User):
+8         if user.id is None:
+9             user.id = len(self.users) + 1
+10             self.users[user.id] = user
+11         else:
+12             self.users[user.id] = user
+13 
+14     def get(self, id: int) -> User:
+15         return self.users.get(id)
+
+File: src/main.py
+1 from .services.account_service import AccountService
+2 from .services.transaction_service import TransactionService
+3 from .services.user_service import UserService
+4 
+5 def main():
+6     account_repository = AccountRepository()
+7     transaction_repository = TransactionRepository()
+8     user_repository = UserRepository()
+9 
+10     account_service = AccountService(account_repository)
+11     transaction_service = TransactionService(transaction_repository)
+12     user_service = UserService(user_repository)
+13 
+14     user = user_service.create_user("John Doe", "john@example.com")
+15     account = account_service.create_account(user.id)
+16 
+17     transaction_service.create_transaction(account.id, 100.0, "deposit")
+18     transaction_service.create_transaction(account.id, 50.0, "withdrawal")
+19 
+20     print("Account balance:", account.balance)
+21 
+22 if __name__ == "__main__":
+23     main()
+
+File: tests/__init__.py
+1 # empty file
+
+File: tests/test_account.py
+1 from src.models.account import Account
+2 from src.services.account_service import AccountService
+3 from src.repositories.account_repository import AccountRepository
+4 
+5 def test_create_account():
+6     repository = AccountRepository()
+7     service = AccountService(repository)
+8     account = service.create_account(1, 100.0)
+9     assert account.id == 1
+10     assert account.user_id == 1
+11     assert account.balance == 100.0
+
+File: tests/test_transaction.py
+1 from src.models.transaction import Transaction
+2 from src.services.transaction_service import TransactionService
+3 from src.repositories.transaction_repository import TransactionRepository
+4 
+5 def test_create_transaction():
+6     repository = TransactionRepository()
+7     service = TransactionService(repository)
+8     transaction = service.create_transaction(1, 100.0, "deposit")
+9     assert transaction.id == 1
+10     assert transaction.account_id == 1
+11     assert transaction.amount == 100.0
+12     assert transaction.type == "deposit"
+
+File: tests/test_user.py
+1 from src.models.user import User
+2 from src.services.user_service import UserService
+3 from src.repositories.user_repository import UserRepository
+4 
+5 def test_create_user():
+6     repository = UserRepository()
+7     service = UserService(repository)
+8     user = service.create_user("John Doe", "john@example.com")
+9     assert user.id == 1
+10     assert user.name == "John Doe"
+11     assert user.email == "john@example.com"
+
+```
+
+================================== Ai Message ==================================
+
+Here is the Unix script that installs dependencies and runs the codebase:
+```
+#!/bin/bash
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the main script
+python src/main.py
+
+# Run the tests
+pytest tests/
+```

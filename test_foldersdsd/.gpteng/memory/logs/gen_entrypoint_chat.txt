@@ -1,0 +1,370 @@
+
+2024-06-12T20:48:00.532607
+================================ System Message ================================
+
+You will get information about a codebase that is currently on disk in the current folder.
+The user will ask you to write a script that runs the code in a specific way.
+You will answer with code blocks that include all the necessary terminal commands.
+Do not install globally. Do not use sudo.
+Do not explain the code, just give the commands.
+Do not use placeholders, use example values (like . for a folder argument) if necessary.
+
+
+================================ Human Message =================================
+
+
+        Make a unix script that
+        a) installs dependencies
+        b) runs all necessary parts of the codebase (in parallel if necessary)
+        
+Information about the codebase:
+
+```
+File: Structure
+1 api/
+2 app/
+3 __init__.py
+4 main.py
+5 models/
+6 __init__.py
+7 user.py
+8 team.py
+9 schemas/
+10 __init__.py
+11 user.py
+12 team.py
+13 routers/
+14 __init__.py
+15 user.py
+16 team.py
+17 db.py
+18 requirements.txt
+19 .gitignore
+
+File: api/app/__init__.py
+1 # empty file
+
+File: api/app/main.py
+1 from fastapi import FastAPI
+2 from routers import user, team
+3 
+4 app = FastAPI()
+5 
+6 app.include_router(user.router)
+7 app.include_router(team.router)
+
+File: api/app/models/__init__.py
+1 # empty file
+
+File: api/app/models/user.py
+1 from sqlalchemy import Column, Integer, String
+2 from sqlalchemy.ext.declarative import declarative_base
+3 
+4 Base = declarative_base()
+5 
+6 class User(Base):
+7     __tablename__ = 'users'
+8     id = Column(Integer, primary_key=True)
+9     username = Column(String, unique=True)
+10     password = Column(String)
+11     profile = Column(String)
+12     team_id = Column(Integer)
+
+File: api/app/models/team.py
+1 from sqlalchemy import Column, Integer, String
+2 from sqlalchemy.ext.declarative import declarative_base
+3 
+4 Base = declarative_base()
+5 
+6 class Team(Base):
+7     __tablename__ = 'teams'
+8     id = Column(Integer, primary_key=True)
+9     name = Column(String, unique=True)
+
+File: api/app/schemas/__init__.py
+1 # empty file
+
+File: api/app/schemas/user.py
+1 from pydantic import BaseModel
+2 
+3 class UserSchema(BaseModel):
+4     username: str
+5     password: str
+6     profile: str
+7     team_id: int
+
+File: api/app/schemas/team.py
+1 from pydantic import BaseModel
+2 
+3 class TeamSchema(BaseModel):
+4     name: str
+
+File: api/app/routers/__init__.py
+1 # empty file
+
+File: api/app/routers/user.py
+1 from fastapi import APIRouter, HTTPException
+2 from sqlalchemy.orm import Session
+3 from .models import User
+4 from .schemas import UserSchema
+5 
+6 router = APIRouter()
+7 
+8 @router.post("/register")
+9 async def register_user(user: UserSchema, db: Session):
+10     # check if username already exists
+11     existing_user = db.query(User).filter_by(username=user.username).first()
+12     if existing_user:
+13         raise HTTPException(status_code=400, detail="Username already exists")
+14     new_user = User(username=user.username, password=user.password, profile=user.profile, team_id=user.team_id)
+15     db.add(new_user)
+16     db.commit()
+17     return {"message": "User created successfully"}
+18 
+19 @router.post("/login")
+20 async def login_user(username: str, password: str, db: Session):
+21     user = db.query(User).filter_by(username=username, password=password).first()
+22     if not user:
+23         raise HTTPException(status_code=401, detail="Invalid username or password")
+24     return {"message": "Logged in successfully"}
+
+File: api/app/routers/team.py
+1 from fastapi import APIRouter, HTTPException
+2 from sqlalchemy.orm import Session
+3 from .models import Team
+4 from .schemas import TeamSchema
+5 
+6 router = APIRouter()
+7 
+8 @router.post("/teams")
+9 async def create_team(team: TeamSchema, db: Session):
+10     new_team = Team(name=team.name)
+11     db.add(new_team)
+12     db.commit()
+13     return {"message": "Team created successfully"}
+
+File: api/db.py
+1 from sqlalchemy import create_engine
+2 from sqlalchemy.orm import sessionmaker
+3 
+4 SQLALCHEMY_DATABASE_URL = "sqlite:///api.db"
+5 engine = create_engine(SQLALCHEMY_DATABASE_URL)
+6 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+7 
+8 def get_db():
+9     db = SessionLocal()
+10     try:
+11         yield db
+12     finally:
+13         db.close()
+
+File: api/requirements.txt
+1 fastapi
+2 sqlalchemy
+3 pydantic
+
+File: .gitignore
+1 api/db.db
+
+```
+
+================================== Ai Message ==================================
+
+Here is the Unix script that installs dependencies and runs the codebase:
+```
+#!/bin/bash
+
+# Install dependencies
+pip install -r ./api/requirements.txt
+
+# Create database
+python -c "from api.db import engine; engine.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username STRING UNIQUE, password STRING, profile STRING, team_id INTEGER)'); engine.execute('CREATE TABLE IF NOT EXISTS teams (id INTEGER PRIMARY KEY, name STRING UNIQUE)')"
+
+# Run the FastAPI application
+uvicorn api.app.main:app --host 0.0.0.0 --port 8000 &
+```
+Note: This script assumes that you are running it from the root directory of the project.
+
+2024-06-12T20:49:56.570449
+================================ System Message ================================
+
+You will get information about a codebase that is currently on disk in the current folder.
+The user will ask you to write a script that runs the code in a specific way.
+You will answer with code blocks that include all the necessary terminal commands.
+Do not install globally. Do not use sudo.
+Do not explain the code, just give the commands.
+Do not use placeholders, use example values (like . for a folder argument) if necessary.
+
+
+================================ Human Message =================================
+
+
+        Make a unix script that
+        a) installs dependencies
+        b) runs all necessary parts of the codebase (in parallel if necessary)
+        
+Information about the codebase:
+
+```
+File: Structure
+1 api/
+2 app/
+3 __init__.py
+4 main.py
+5 models/
+6 __init__.py
+7 user.py
+8 team.py
+9 schemas/
+10 __init__.py
+11 user.py
+12 team.py
+13 routers/
+14 __init__.py
+15 user_router.py
+16 team_router.py
+17 database.py
+18 requirements.txt
+19 .gitignore
+
+File: api/app/__init__.py
+1 # empty file
+
+File: api/app/main.py
+1 from fastapi import FastAPI
+2 from fastapi.responses import JSONResponse
+3 from fastapi.requests import Request
+4 from fastapi.responses import HTMLResponse
+5 from fastapi.templating import Jinja2Templates
+6 from fastapi.staticfiles import StaticFiles
+7 from api.routers import user_router, team_router
+8 
+9 app = FastAPI()
+10 
+11 app.include_router(user_router)
+12 app.include_router(team_router)
+13 
+14 templates = Jinja2Templates(directory="templates")
+
+File: api/models/__init__.py
+1 # empty file
+
+File: api/models/user.py
+1 from sqlalchemy import Column, Integer, String
+2 from sqlalchemy.ext.declarative import declarative_base
+3 
+4 Base = declarative_base()
+5 
+6 class User(Base):
+7     __tablename__ = "users"
+8     id = Column(Integer, primary_key=True)
+9     username = Column(String, unique=True)
+10     password = Column(String)
+11     profile = Column(String)
+12     team_id = Column(Integer)
+
+File: api/models/team.py
+1 from sqlalchemy import Column, Integer, String
+2 from sqlalchemy.ext.declarative import declarative_base
+3 
+4 Base = declarative_base()
+5 
+6 class Team(Base):
+7     __tablename__ = "teams"
+8     id = Column(Integer, primary_key=True)
+9     name = Column(String, unique=True)
+
+File: api/schemas/__init__.py
+1 # empty file
+
+File: api/schemas/user.py
+1 from pydantic import BaseModel
+2 
+3 class UserSchema(BaseModel):
+4     username: str
+5     password: str
+6     profile: str
+7     team_id: int
+
+File: api/schemas/team.py
+1 from pydantic import BaseModel
+2 
+3 class TeamSchema(BaseModel):
+4     name: str
+
+File: api/routers/__init__.py
+1 # empty file
+
+File: api/routers/user_router.py
+1 from fastapi import APIRouter, HTTPException
+2 from api.schemas.user import UserSchema
+3 from api.models.user import User
+4 from sqlalchemy.orm import sessionmaker
+5 
+6 router = APIRouter()
+7 
+8 @router.post("/users/")
+9 async def create_user(user: UserSchema):
+10     session = sessionmaker(bind=engine)()
+11     existing_user = session.query(User).filter_by(username=user.username).first()
+12     if existing_user:
+13         raise HTTPException(status_code=400, detail="Username already exists")
+14     new_user = User(username=user.username, password=user.password, profile=user.profile, team_id=user.team_id)
+15     session.add(new_user)
+16     session.commit()
+17     return {"message": "User created successfully"}
+18 
+19 @router.get("/users/")
+20 async def read_users():
+21     session = sessionmaker(bind=engine)()
+22     users = session.query(User).all()
+23     return [{"username": user.username, "profile": user.profile} for user in users]
+
+File: api/routers/team_router.py
+1 from fastapi import APIRouter
+2 from api.schemas.team import TeamSchema
+3 from api.models.team import Team
+4 from sqlalchemy.orm import sessionmaker
+5 
+6 router = APIRouter()
+7 
+8 @router.post("/teams/")
+9 async def create_team(team: TeamSchema):
+10     session = sessionmaker(bind=engine)()
+11     new_team = Team(name=team.name)
+12     session.add(new_team)
+13     session.commit()
+14     return {"message": "Team created successfully"}
+15 
+16 @router.get("/teams/")
+17 async def read_teams():
+18     session = sessionmaker(bind=engine)()
+19     teams = session.query(Team).all()
+20     return [{"name": team.name} for team in teams]
+
+File: api/database.py
+1 from sqlalchemy import create_engine
+2 from sqlalchemy.orm import sessionmaker
+3 
+4 engine = create_engine("sqlite:///database.db")
+5 Session = sessionmaker(bind=engine)
+
+File: requirements.txt
+1 fastapi
+2 sqlalchemy
+3 pydantic
+4 jinja2
+
+File: .gitignore
+1 __pycache__/
+2 database.db
+
+```
+
+================================== Ai Message ==================================
+
+```
+pip install -r requirements.txt
+export DATABASE_URL="sqlite:///database.db"
+python api/app/main.py
+```
